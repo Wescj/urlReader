@@ -7,10 +7,11 @@ space between each byte, preceded by file offset in hex, one line per second (si
 the output of "od -t x1" on Linux)
 
 ## Controls
-"+" increases the speed by 100 milliseconds
-"-" decreases the speed by 100 milliseconds
-" " pauses printing until it is pressed again
-
+Keypress  | Action
+------------- | -------------
+"+"  | increases the speed by 100 milliseconds
+"-"  | decreases the speed by 100 milliseconds
+"space" | pauses printing until it is pressed again
 ## Usage
 ```sh
 node urlReader.js https://example.com/
