@@ -3,7 +3,7 @@ const https = require('https');
 
 
 let paused = false; //True = text print is paused
-let speed = 1000// speed of printing
+let speed = 1000// speed of printing lines
 
 //Gets the next keystroke and proccesses it
 function handleKeyPress() {
@@ -14,25 +14,27 @@ function handleKeyPress() {
       process.exit();
     }else if (key.name === 'space') {
       paused = !paused;
-      console.log('Spacebar pressed. Pausing...');
+      // console.log('Spacebar pressed. Pausing...');
     }else if(key.sequence === '+'){
       
       if(speed != 0){
         speed -= 100;
       }
-      console.log('+ has been pressed increasing speed to ',speed);
+      // console.log('+ has been pressed increasing speed to ',speed);
     }else if(key.sequence === '-'){
       speed += 100;
-      console.log('- has been pressed decreasing speed to ',speed);
+      // console.log('- has been pressed decreasing speed to ',speed);
     }
     // console.log(key)
   });
 }
 
+//function to create delays 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+//prints each line of text in the specified format
 async function printTextResource(text) {
   const lines = text.split('\n');
   let timer;
@@ -46,22 +48,30 @@ async function printTextResource(text) {
       index++
     }
   }
+  process.exit(0)
 }
 
-
-function printBinaryResource(data) {
+//Function prints the data as a hexadecimal in the specified format
+async function printBinaryResource(data) {
   let offset = 0;
+  handleKeyPress()
+
   while (offset < data.length) {
     const hexLine = [];
-    for (let i = 0; i < 16 && offset + i < data.length; i++) {
-      const byte = data.charCodeAt(offset + i); // Get the ASCII value of the character
-      hexLine.push(byte.toString(16).padStart(2, '0'));
-    }
-    setTimeout(() => {
+    await delay(speed); 
+
+    if(!paused){
+      for (let i = 0; i < 16 && offset + i < data.length; i += 2) { // Increment i by 2 to process two characters at a time
+        const byte = parseInt(data.substr(offset + i, 2), 16); // Parse two characters as a hexadecimal byte
+        hexLine.push(byte.toString(16).padStart(2, '0'));
+      }
       console.log(`${offset.toString(16).padStart(8, '0')} ${hexLine.join(' ')}`);
-    }, offset * 1000);
-    offset += 16;
+      // Increment offset by 16 to process two characters per iteration
+      offset += 16;
+    }
+     
   }
+  process.exit(0)
 }
 
 
@@ -74,36 +84,40 @@ function main() {
   }
 
   https.get(url, (response) => {
-    let data = '';
-
+    const chunks = [];
     response.on('data', (chunk) => {
-      data += chunk;
+      chunks.push(chunk)
     });
 
     response.on('end', () => {
       const contentType = response.headers['content-type'] || '';
       if (contentType.startsWith('text')) {
-        printTextResource(data);
+        const buffer = Buffer.concat(chunks);
+        const textData = buffer.toString();
+        // console.log(textData)
+        printTextResource(textData);
       } else {
-        console.log("testing printBinary")
-        console.log(data.length)
-        printBinaryResource([...data].map((char) => char.charCodeAt(0)));
+        // converts the chunks to hex 
+        const buffer = Buffer.concat(chunks);
+        const hexData = buffer.toString('hex');
+        // console.log(hexData)
+        printBinaryResource(hexData);   
       }
-      
       
     });
 
     response.on('error', (error) => {
       console.log(`Failed to fetch resource from ${url}. Error: ${error.message}`);
+      process.exit(1)
     });
   });
-  
+ 
 
 }
 
 main();
-// process.exit(0);
 
 //cd C:\Users\Wescj\Documents\School\Atla Coding\
 // node urlReader.js https://example.com/
 // node urlReader.js https://picsum.photos/200/300
+// node urlReader.js https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI
