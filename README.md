@@ -6,7 +6,7 @@ then exits.
 space between each byte, preceded by file offset in hex, one line per second (similar to
 the output of "od -t x1" on Linux)
 
-#Controls
+##Controls
 "+" increases the speed by 100 milliseconds
 "-" decreases the speed by 100 milliseconds
 " " pauses printing until it is pressed again
